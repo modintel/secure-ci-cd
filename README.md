@@ -32,7 +32,7 @@ secure-ci-cd/
 └── requirements.txt         # Python dependencies
 ```
 
-## 🔧 CI/CD Pipeline Stages
+## CI/CD Pipeline Stages
 
 The pipeline runs on every push and pull request:
 
@@ -43,7 +43,7 @@ The pipeline runs on every push and pull request:
 | **Dynamic Analysis** | OWASP ZAP | DAST - Test running application |
 | **Security Summary** | Custom | Aggregate security reports |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Run the API locally
 

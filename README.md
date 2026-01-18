@@ -1,41 +1,101 @@
-# Phishing Detection
+# Secure CI/CD Pipeline - Phishing Detection Extension
 
-A machine learning-powered phishing detection system with a Chrome extension for real-time website analysis. Built using real-world data from the **PhiUSIIL Phishing URL Dataset (UCI Machine Learning Repository)**.
+A phishing detection browser extension with Flask API backend, featuring a complete CI/CD pipeline with security analysis -- SAST + DAST.
+
+## Project Overview
+
+This project demonstrates a secure CI/CD pipeline implementation with:
+- **Static Application Security Testing (SAST)** using Semgrep
+- **Dynamic Application Security Testing (DAST)** using OWASP ZAP
+- **Automated vulnerability detection and reporting**
+
+##  Project Structure
+
+```
+secure-ci-cd/
+├── .github/
+│   └── workflows/
+│       └── ci.yml           # CI/CD pipeline configuration
+├── .zap/
+│   └── rules.tsv            # ZAP scanning rules
+├── src/
+│   ├── api.py               # Flask API with ML model
+│   ├── feature_extraction.py # URL feature extraction
+│   └── train.py             # Model training script
+├── extension/
+│   ├── manifest.json        # Chrome extension manifest
+│   ├── background.js        # Background service worker
+│   ├── popup.html/js        # Extension popup UI
+│   └── content.js           # Content script
+├── tests/
+│   └── test_api.py          # Unit tests
+└── requirements.txt         # Python dependencies
+```
+
+## 🔧 CI/CD Pipeline Stages
+
+The pipeline runs on every push and pull request:
+
+| Stage | Tool | Purpose |
+|-------|------|---------|
+| **Build & Test** | pytest | Run unit tests |
+| **Static Analysis** | Semgrep | SAST - Find vulnerabilities in source code |
+| **Dynamic Analysis** | OWASP ZAP | DAST - Test running application |
+| **Security Summary** | Custom | Aggregate security reports |
+
+## 🚀 Quick Start
+
+### Run the API locally
+
+```bash
+cd src
+pip install -r ../requirements.txt
+python train.py   # Train the ML model first
+python api.py     # Start the API server
+```
+
+### Run tests locally
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/predict` | POST | Predict if URL is phishing |
+| `/health` | GET | Health check |
+| `/reload` | POST | Reload the ML model |
+
+## Security Analysis
+
+This project intentionally includes security vulnerabilities for educational purposes to demonstrate:
+
+1. How SAST tools detect code-level vulnerabilities
+2. How DAST tools detect runtime vulnerabilities
+3. The importance of security in CI/CD pipelines
+
+</br>
+
+> ⚠️ **Warning**: This code contains intentional vulnerabilities for demonstration. Do not use in production!
+
+## 📚 Assignment Information
+
+**Course:** Software Security  
+**Topic:** CI/CD Pipeline with Static & Dynamic Analysis  
+**Tools:** GitHub Actions, Semgrep, OWASP ZAP
+
+## Team
+
+- Liyu Desta - UGR/4648/14
+- Fozia Mohammed - UGR/4648/14
+- Eyoab Amare - UGR/4648/14
+- Meaza Tadele - UGR/4648/14
+- Natanim Kemal - UGR/4648/14
 
 
-## Overview
+## 📝 License
 
-This project provides an end-to-end solution for detecting phishing websites:
-- A **Random Forest classifier** trained on 100,000+ real URLs
-- A **Flask REST API** for URL predictions
-- A **Chrome Extension** for automatic, real-time protection while browsing
-
-
-## Features
-
-### Machine Learning Model
-- **Algorithm**: Random Forest Classifier (100 estimators)
-- **Dataset**: PhiUSIIL Phishing URL Dataset from UCI
-- **Validation**: 5-fold cross-validation with train/test split
-- **Output**: Classification report, confusion matrix, and accuracy metrics
-
-
-### Chrome Extension
-- **Automatic Scanning**: Checks every page you visit
-- **Visual Indicators**: Badge shows OK, DIE, or ERR 
-- **Notifications**: Desktop alerts when phishing is detected
-- **Warning Banner**: Injects a dismissible warning banner on phishing pages
-- **Caching**: 24-hour cache to avoid redundant API calls
-- **Whitelist**: Pre-configured list of trusted domains (Google, Facebook, Amazon, etc.)
-- **Re-scan Button**: Manual rescan option in the popup
-
-## Usage
-1. Ensure the Flask API is running (`python src/api.py`)
-2. Browse the web as normal
-3. The extension automatically scans each page:
-   - **Green "OK" badge**: Site appears legitimate
-   - **Red "DIE" badge**: Phishing detected - a warning banner will appear
-   - **Orange "..." badge**: Scan in progress
-   - **Gray "ERR" badge**: Could not reach the API
-4. Click the extension icon to see details and confidence score
-5. Use the **Re-scan** button to manually recheck a page
+Educational use only.

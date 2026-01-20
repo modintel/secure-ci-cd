@@ -1,4 +1,4 @@
-# Secure CI/CD Pipeline - Phishing Detection Extension
+# Secure CI/CD Pipeline - Phishing Detector Extension
 
 A phishing detection browser extension with Flask API backend, featuring a complete CI/CD pipeline with security analysis -- SAST + DAST.
 

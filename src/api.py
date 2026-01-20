@@ -1,30 +1,38 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import joblib
 import pandas as pd
 from feature_extraction import extract_features, get_feature_names
 import os
 import sqlite3
-import subprocess
+import socket
+import re
 
 app = Flask(__name__)
-CORS(app)
 
-# ============================================================
-# INTENTIONALLY VULNERABLE CODE FOR SECURITY ANALYSIS DEMO
-# DO NOT USE IN PRODUCTION
-# ============================================================
-
-API_SECRET_KEY = "sk-prod-1234567890abcdef"
-DATABASE_PASSWORD = "admin123"
-ADMIN_TOKEN = "super_secret_token_12345"
+CORS(app, origins=['http://localhost:3000', 'chrome-extension://*'])
 
 MODEL_PATH = 'model.pkl'
 SCALER_PATH = 'scaler.pkl'
 DB_PATH = 'scan_logs.db'
+LOGS_DIR = 'logs'
 
 model = None
 scaler = None
+
+
+def add_security_headers(response):
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=()'
+    return response
+
+
+@app.after_request
+def apply_security_headers(response):
+    return add_security_headers(response)
 
 
 def init_db():
@@ -105,9 +113,7 @@ def predict():
         })
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'An error occurred processing your request'}), 500
 
 
 @app.route('/health', methods=['GET'])
@@ -128,11 +134,6 @@ def reload():
     return jsonify({'success': success})
 
 
-# ============================================================
-# VULNERABLE ENDPOINTS FOR SECURITY ANALYSIS DEMONSTRATION
-# DO NOT USE IN PRODUCTION
-# ============================================================
-
 @app.route('/log', methods=['POST'])
 def log_scan():
     data = request.get_json()
@@ -143,8 +144,10 @@ def log_scan():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
-    query = f"INSERT INTO logs (url, result, timestamp) VALUES ('{url}', '{result}', datetime('now'))"
-    c.execute(query)
+    c.execute(
+        "INSERT INTO logs (url, result, timestamp) VALUES (?, ?, datetime('now'))",
+        (url, result)
+    )
     
     conn.commit()
     conn.close()
@@ -152,39 +155,59 @@ def log_scan():
     return jsonify({'status': 'logged', 'url': url})
 
 
+def is_valid_domain(domain):
+    pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$'
+    return bool(re.match(pattern, domain))
+
+
 @app.route('/lookup', methods=['GET'])
 def dns_lookup():
     domain = request.args.get('domain', '')
     
+    if not domain or not is_valid_domain(domain):
+        return jsonify({'error': 'Invalid domain format'}), 400
+    
     try:
-        result = subprocess.check_output(f"nslookup {domain}", shell=True, stderr=subprocess.STDOUT)
-        return jsonify({'result': result.decode('utf-8', errors='ignore')})
-    except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        ip_address = socket.gethostbyname(domain)
+        return jsonify({
+            'domain': domain,
+            'ip_address': ip_address
+        })
+    except socket.gaierror:
+        return jsonify({'error': 'Domain not found'}), 404
+    except Exception:
+        return jsonify({'error': 'Lookup failed'}), 500
 
 
 @app.route('/logs/<filename>')
 def view_log(filename):
+    safe_filename = os.path.basename(filename)
+    
+    if not safe_filename or '..' in filename or filename.startswith('/'):
+        return jsonify({'error': 'Invalid filename'}), 400
+    
+    if not os.path.exists(LOGS_DIR):
+        os.makedirs(LOGS_DIR)
+    
+    filepath = os.path.join(LOGS_DIR, safe_filename)
+    
+    real_path = os.path.realpath(filepath)
+    logs_real_path = os.path.realpath(LOGS_DIR)
+    
+    if not real_path.startswith(logs_real_path):
+        return jsonify({'error': 'Access denied'}), 403
+    
     try:
-        filepath = f"logs/{filename}"
         with open(filepath, 'r') as f:
             return f.read()
     except FileNotFoundError:
         return jsonify({'error': 'Log file not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        return jsonify({'error': 'Unable to read file'}), 500
 
 
-@app.route('/debug')
-def debug_info():
-    return jsonify({
-        'api_key': API_SECRET_KEY,
-        'db_password': DATABASE_PASSWORD,
-        'model_path': MODEL_PATH,
-        'environment': dict(os.environ)
-    })
 
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=False)

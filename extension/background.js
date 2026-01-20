@@ -1,6 +1,6 @@
 import { WHITELIST } from './whitelist.js';
 
-const API_URL = 'http://127.0.0.1:5000/predict';
+const API_URL = 'https://127.0.0.1:5000/predict';
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

@@ -90,7 +90,7 @@ This project intentionally includes security vulnerabilities for educational pur
 ## Team
 
 - Liyu Desta - UGR/4648/14
-- Fozia Mohammed - UGR/4648/14
+- Fozia Mohammed - UGR/4535/14
 - Eyoab Amare - UGR/4648/14
 - Meaza Tadele - UGR/4648/14
 - Natanim Kemal - UGR/4648/14

@@ -91,9 +91,9 @@ This project intentionally includes security vulnerabilities for educational pur
 
 - Liyu Desta - UGR/4648/14
 - Fozia Mohammed - UGR/4535/14
-- Eyoab Amare - UGR/4648/14
-- Meaza Tadele - UGR/4648/14
-- Natanim Kemal - UGR/4648/14
+- Eyoab Amare - UGR/5756/14
+- Meaza Tadele - UGR/6378/14
+- Natanim Kemal - UGR/464814
 
 
 ## License
